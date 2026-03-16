@@ -9,6 +9,7 @@ require (
 	github.com/modelcontextprotocol/go-sdk v1.2.0
 	github.com/onsi/ginkgo/v2 v2.27.5
 	github.com/onsi/gomega v1.39.0
+	github.com/yanyiwu/gojieba v1.4.7
 	gopkg.in/yaml.v3 v3.0.1
 )
 
