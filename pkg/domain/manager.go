@@ -39,10 +39,16 @@ func NewFileSystemManager(skillsDir string, gitRepos []string) (*FileSystemManag
 		return nil, fmt.Errorf("failed to create searcher: %w", err)
 	}
 
+	// 自动检测 skills 目录下的 git 仓库
+	detectedGitRepos := detectGitRepos(skillsDir)
+
+	// 合并配置的 git repos 和自动检测的 git repos
+	allGitRepos := mergeGitRepos(gitRepos, detectedGitRepos)
+
 	manager := &FileSystemManager{
 		skillsDir: skillsDir,
 		searcher:  searcher,
-		gitRepos:  gitRepos,
+		gitRepos:  allGitRepos,
 	}
 
 	// Initial index build
@@ -51,6 +57,57 @@ func NewFileSystemManager(skillsDir string, gitRepos []string) (*FileSystemManag
 	}
 
 	return manager, nil
+}
+
+// detectGitRepos 检测指定目录下的所有 git 仓库
+// 通过检查是否存在 .git 子目录来识别 git 仓库
+func detectGitRepos(dir string) []string {
+	var gitRepos []string
+
+	entries, err := os.ReadDir(dir)
+	if err != nil {
+		return gitRepos
+	}
+
+	for _, entry := range entries {
+		if !entry.IsDir() {
+			continue
+		}
+
+		subDir := filepath.Join(dir, entry.Name())
+		gitDir := filepath.Join(subDir, ".git")
+
+		// 检查是否存在 .git 目录
+		if info, err := os.Stat(gitDir); err == nil && info.IsDir() {
+			gitRepos = append(gitRepos, entry.Name())
+		}
+	}
+
+	return gitRepos
+}
+
+// mergeGitRepos 合并配置的 git repos 和自动检测的 git repos
+// 去重并保留所有有效的 git 仓库
+func mergeGitRepos(configured, detected []string) []string {
+	repoSet := make(map[string]bool)
+
+	// 先添加配置的 repos
+	for _, repo := range configured {
+		repoSet[repo] = true
+	}
+
+	// 再添加检测到的 repos
+	for _, repo := range detected {
+		repoSet[repo] = true
+	}
+
+	// 转换为切片
+	result := make([]string, 0, len(repoSet))
+	for repo := range repoSet {
+		result = append(result, repo)
+	}
+
+	return result
 }
 
 // isGitRepoPath checks if a path is within a git repository directory
@@ -110,6 +167,11 @@ func (m *FileSystemManager) findSkillDirs(root string, basePath string) ([]strin
 func (m *FileSystemManager) ListSkills() ([]Skill, error) {
 	var skills []Skill
 
+	// 重新检测 git 仓库（处理运行时新增的仓库）
+	detectedRepos := detectGitRepos(m.skillsDir)
+	allGitRepos := mergeGitRepos(m.gitRepos, detectedRepos)
+	m.gitRepos = allGitRepos
+
 	// Find all directories containing SKILL.md
 	skillDirs, err := m.findSkillDirs(m.skillsDir, m.skillsDir)
 	if err != nil {
@@ -126,9 +188,20 @@ func (m *FileSystemManager) ListSkills() ([]Skill, error) {
 			continue
 		}
 		parts := strings.Split(relPath, string(filepath.Separator))
-		
-		// Check if this skill is from a git repo (path has multiple parts and first part is a repo name)
+
+		// 自动检测：如果路径的第一部分是 git 仓库，则标记为只读
+		isGitRepo := false
 		if len(parts) > 1 {
+			repoName := parts[0]
+			// 检查是否是 git 仓库（通过检测 .git 目录）
+			gitDir := filepath.Join(m.skillsDir, repoName, ".git")
+			if _, err := os.Stat(gitDir); err == nil {
+				isGitRepo = true
+			}
+		}
+
+		// 检查是否在配置的 git repos 列表中
+		if len(parts) > 1 && !isGitRepo {
 			repoName := parts[0]
 			repoEnabled := false
 			for _, enabledRepoName := range m.gitRepos {
@@ -137,13 +210,13 @@ func (m *FileSystemManager) ListSkills() ([]Skill, error) {
 					break
 				}
 			}
-			// Skip skills from disabled repos
+			// Skip skills from disabled repos (only if not auto-detected as git repo)
 			if !repoEnabled {
 				continue
 			}
 		}
 
-		isReadOnly := m.isGitRepoPath(skillPath)
+		isReadOnly := isGitRepo || m.isGitRepoPath(skillPath)
 
 		var skillName string
 		if isReadOnly {
