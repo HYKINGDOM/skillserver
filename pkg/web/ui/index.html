@@ -12,6 +12,7 @@
         }
     </script>
     <link rel="stylesheet" href="/style.css">
+    <script src="/i18n.js"></script>
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
 </head>
 <body class="bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-gray-100 transition-colors">
@@ -25,19 +26,27 @@
                 <button 
                     @click="toggleTheme()"
                     class="p-2 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
-                    title="Toggle theme"
+                    :title="t('toggleTheme')"
                 >
                     <i x-show="isDark" class="fas fa-sun text-yellow-500"></i>
                     <i x-show="!isDark" class="fas fa-moon text-gray-600 dark:text-gray-300"></i>
                 </button>
+                <button 
+                    @click="toggleLanguage()"
+                    class="p-2 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors flex items-center gap-1"
+                    :title="t('switchLanguage')"
+                >
+                    <i class="fas fa-globe text-blue-500 dark:text-blue-400"></i>
+                    <span class="text-sm font-medium" x-text="currentLang === 'zh' ? 'EN' : '中'"></span>
+                </button>
                 <button @click="showImportModal = true" class="btn btn-secondary">
-                    <i class="fas fa-upload mr-2"></i>Import Skill
+                    <i class="fas fa-upload mr-2"></i><span x-text="t('importSkill')"></span>
                 </button>
                 <button @click="showGitReposModal = true; loadGitRepos()" class="btn btn-secondary">
-                    <i class="fas fa-code-branch mr-2"></i>Git Repos
+                    <i class="fas fa-code-branch mr-2"></i><span x-text="t('gitRepos')"></span>
                 </button>
                 <button @click="showEditor = true; editingSkill = null; skillContent = ''; skillName = ''; skillDescription = ''; skillLicense = ''; skillCompatibility = ''; nameValidationError = ''" class="btn btn-primary">
-                    <i class="fas fa-plus mr-2"></i>New Skill
+                    <i class="fas fa-plus mr-2"></i><span x-text="t('newSkill')"></span>
                 </button>
             </div>
         </header>
@@ -49,7 +58,7 @@
                 type="text" 
                 x-model="searchQuery" 
                 @input="searchSkills()"
-                placeholder="Search skills..."
+                :placeholder="t('searchPlaceholder')"
                 class="search-input pl-10 pr-20 bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-gray-100"
                 id="search-input"
             >
@@ -61,7 +70,7 @@
                 <i class="fas fa-times"></i>
             </button>
             <div x-show="searchQuery && filteredSkills.length > 0" class="absolute right-3 top-1/2 transform -translate-y-1/2 text-sm text-gray-500 dark:text-gray-400">
-                <span x-text="filteredSkills.length"></span> result<span x-show="filteredSkills.length !== 1">s</span>
+                <span x-text="filteredSkills.length"></span> <span x-text="filteredSkills.length === 1 ? t('result') : t('results')"></span>
             </div>
         </div>
 
@@ -72,26 +81,26 @@
                     <div class="skill-card-header">
                         <h3 class="text-blue-600 dark:text-blue-400" x-text="skill.name"></h3>
                         <span x-show="skill.readOnly" class="read-only-badge bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-300">
-                            <i class="fas fa-lock mr-1"></i>Read-only
+                            <i class="fas fa-lock mr-1"></i><span x-text="t('readOnly')"></span>
                         </span>
                     </div>
                     <p x-text="skill.description || 'No description'" class="skill-description text-gray-600 dark:text-gray-400"></p>
                     <div class="skill-actions">
                         <button @click.stop="exportSkill(skill.name)" class="btn btn-small btn-secondary">
-                            <i class="fas fa-download mr-1"></i>Export
+                            <i class="fas fa-download mr-1"></i><span x-text="t('export')"></span>
                         </button>
                         <button x-show="!skill.readOnly" @click.stop="deleteSkill(skill.name)" class="btn btn-small btn-danger">
-                            <i class="fas fa-trash mr-1"></i>Delete
+                            <i class="fas fa-trash mr-1"></i><span x-text="t('delete')"></span>
                         </button>
                     </div>
                 </div>
             </template>
             <div x-show="filteredSkills.length === 0" class="empty-state">
                 <i class="fas fa-inbox text-6xl mb-4 text-gray-300 dark:text-gray-600"></i>
-                <p class="text-xl mb-2 text-gray-900 dark:text-gray-100">No skills found</p>
-                <p class="text-gray-500 dark:text-gray-400 mb-4">Create your first skill to get started!</p>
+                <p class="text-xl mb-2 text-gray-900 dark:text-gray-100" x-text="t('noSkillsFound')"></p>
+                <p class="text-gray-500 dark:text-gray-400 mb-4" x-text="t('createFirstSkill')"></p>
                 <button @click="showEditor = true; editingSkill = null; skillContent = ''; skillName = ''; skillDescription = ''; skillLicense = ''; skillCompatibility = ''; nameValidationError = ''" class="btn btn-primary">
-                    <i class="fas fa-plus mr-2"></i>Create Skill
+                    <i class="fas fa-plus mr-2"></i><span x-text="t('createSkill')"></span>
                 </button>
             </div>
         </div>
@@ -99,41 +108,41 @@
         <!-- Editor -->
         <div class="editor bg-white dark:bg-gray-800" x-show="showEditor">
             <div class="editor-header flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-gray-200 dark:border-gray-700">
-                <h2 class="text-xl sm:text-2xl text-blue-600 dark:text-blue-400" x-text="editingSkill ? 'Edit Skill' : 'New Skill'"></h2>
+                <h2 class="text-xl sm:text-2xl text-blue-600 dark:text-blue-400" x-text="editingSkill ? t('editSkill') : t('newSkill')"></h2>
                 <div x-show="!editingSkill || !editingSkill.readOnly" class="editor-actions flex gap-2 w-full sm:w-auto">
                     <button @click="saveSkill()" class="btn btn-primary" :disabled="isLoading">
                         <i x-show="!isLoading" class="fas fa-save mr-2"></i>
-                        <i x-show="isLoading" class="fas fa-spinner fa-spin mr-2"></i>Save
+                        <i x-show="isLoading" class="fas fa-spinner fa-spin mr-2"></i><span x-text="t('save')"></span>
                     </button>
                     <button @click="cancelEdit()" class="btn btn-secondary">
-                        <i class="fas fa-times mr-2"></i>Cancel
+                        <i class="fas fa-times mr-2"></i><span x-text="t('cancel')"></span>
                     </button>
                 </div>
             </div>
             <div x-show="editingSkill && editingSkill.readOnly" class="read-only-warning bg-yellow-50 dark:bg-yellow-900/20 border-yellow-200 dark:border-yellow-800 text-yellow-800 dark:text-yellow-300">
-                <i class="fas fa-lock mr-2"></i><strong>Read-only:</strong> This skill is from a git repository and cannot be edited.
+                <i class="fas fa-lock mr-2"></i><strong x-text="t('readOnly') + ':'"></strong> <span x-text="t('readOnlyWarning')"></span>
             </div>
             
             <!-- Tabs -->
             <div class="tabs flex gap-2 overflow-x-auto border-b border-gray-200 dark:border-gray-700" x-show="editingSkill !== null">
                 <button @click="activeTab = 'content'" :class="{'tab': true, 'active': activeTab === 'content', 'text-blue-600 dark:text-blue-400 border-blue-600 dark:border-blue-400': activeTab === 'content', 'text-gray-600 dark:text-gray-400': activeTab !== 'content'}">
-                    <i class="fas fa-file-alt mr-2"></i>Content
+                    <i class="fas fa-file-alt mr-2"></i><span x-text="t('contentTab')"></span>
                 </button>
                 <button @click="activeTab = 'resources'; loadResources()" :class="{'tab': true, 'active': activeTab === 'resources', 'text-blue-600 dark:text-blue-400 border-blue-600 dark:border-blue-400': activeTab === 'resources', 'text-gray-600 dark:text-gray-400': activeTab !== 'resources'}" :disabled="!editingSkill">
-                    <i class="fas fa-folder mr-2"></i>Resources
+                    <i class="fas fa-folder mr-2"></i><span x-text="t('resourcesTab')"></span>
                 </button>
             </div>
             
             <!-- Content Tab -->
             <div x-show="activeTab === 'content' || editingSkill === null">
                 <div class="form-group">
-                    <label class="form-label">Skill Name (must match directory name)</label>
+                    <label class="form-label" x-text="t('skillName')"></label>
                     <div class="relative">
                         <input 
                             type="text" 
                             x-model="skillName" 
                             @input="validateName()"
-                            placeholder="skill-name (lowercase, numbers, hyphens only)"
+                            :placeholder="t('skillNamePlaceholder')"
                             :disabled="editingSkill !== null || (editingSkill && editingSkill.readOnly)"
                             :class="{
                                 'border-red-500': nameValidationError,
@@ -155,10 +164,10 @@
                     </p>
                 </div>
                 <div class="form-group">
-                    <label class="form-label">Description <span class="required-indicator">*</span></label>
+                    <label class="form-label"><span x-text="t('description')"></span> <span class="required-indicator">*</span></label>
                     <textarea 
                         x-model="skillDescription" 
-                        placeholder="A description of what this skill does and when to use it (1-1024 characters)"
+                        :placeholder="t('descriptionPlaceholder')"
                         :disabled="editingSkill && editingSkill.readOnly"
                         :class="{
                             'border-red-500': skillDescription.length > 1024 || (skillDescription.length === 0 && skillDescription.trim().length === 0),
@@ -169,7 +178,7 @@
                     <div class="flex justify-between items-center mt-1">
                         <span class="text-xs text-gray-500 flex items-center gap-1">
                             <i class="fas fa-info-circle"></i>
-                            Required: 1-1024 characters
+                            <span x-text="t('descriptionRequired')"></span>
                         </span>
                         <span 
                             :class="{
@@ -185,21 +194,21 @@
                     </div>
                 </div>
                 <div class="form-group">
-                    <label class="form-label">License (optional)</label>
+                    <label class="form-label" x-text="t('license')"></label>
                     <input 
                         type="text" 
                         x-model="skillLicense" 
-                        placeholder="e.g., Apache-2.0"
+                        :placeholder="t('licensePlaceholder')"
                         :disabled="editingSkill && editingSkill.readOnly"
                         class="skill-name-input full-width bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-gray-100"
                     >
                 </div>
                 <div class="form-group">
-                    <label class="form-label">Compatibility (optional, max 500 chars)</label>
+                    <label class="form-label" x-text="t('compatibility')"></label>
                     <input 
                         type="text" 
                         x-model="skillCompatibility" 
-                        placeholder="e.g., Requires git, docker, jq"
+                        :placeholder="t('compatibilityPlaceholder')"
                         :disabled="editingSkill && editingSkill.readOnly"
                         class="skill-name-input full-width bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-gray-100"
                     >
@@ -218,7 +227,7 @@
                 </div>
                 <div class="form-group">
                     <div class="flex justify-between items-center mb-2">
-                        <label class="form-label mb-0">Content (Markdown)</label>
+                        <label class="form-label mb-0" x-text="t('content')"></label>
                         <button 
                             type="button"
                             @click="markdownPreview = !markdownPreview"
@@ -226,7 +235,7 @@
                             :disabled="editingSkill && editingSkill.readOnly"
                         >
                             <i :class="markdownPreview ? 'fa-edit' : 'fa-eye'" class="fas mr-1"></i>
-                            <span x-text="markdownPreview ? 'Edit' : 'Preview'"></span>
+                            <span x-text="markdownPreview ? t('edit') : t('preview')"></span>
                         </button>
                     </div>
                     <div x-show="!markdownPreview">
@@ -245,9 +254,9 @@
             <div x-show="activeTab === 'resources' && editingSkill !== null">
                 <div class="resource-section">
                     <div class="resource-section-header flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
-                        <h3><i class="fas fa-code mr-2"></i>Scripts</h3>
+                        <h3><i class="fas fa-code mr-2"></i><span x-text="t('scripts')"></span></h3>
                         <button @click="showUploadDialog('script')" class="btn btn-small btn-primary w-full sm:w-auto" :disabled="editingSkill && editingSkill.readOnly">
-                            <i class="fas fa-upload mr-1"></i>Upload
+                            <i class="fas fa-upload mr-1"></i><span x-text="t('upload')"></span>
                         </button>
                     </div>
                     <div 
@@ -272,16 +281,16 @@
                         </template>
                         <div x-show="!resources.scripts || resources.scripts.length === 0" class="empty-resource-state text-gray-500 dark:text-gray-400">
                             <i class="fas fa-code text-4xl mb-2 text-gray-300 dark:text-gray-600"></i>
-                            <p>No scripts</p>
+                            <p x-text="t('noScripts')"></p>
                         </div>
                     </div>
                 </div>
                 
                 <div class="resource-section">
                     <div class="resource-section-header flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
-                        <h3><i class="fas fa-book mr-2"></i>References</h3>
+                        <h3><i class="fas fa-book mr-2"></i><span x-text="t('references')"></span></h3>
                         <button @click="showUploadDialog('reference')" class="btn btn-small btn-primary w-full sm:w-auto" :disabled="editingSkill && editingSkill.readOnly">
-                            <i class="fas fa-upload mr-1"></i>Upload
+                            <i class="fas fa-upload mr-1"></i><span x-text="t('upload')"></span>
                         </button>
                     </div>
                     <div 
@@ -306,16 +315,16 @@
                         </template>
                         <div x-show="!resources.references || resources.references.length === 0" class="empty-resource-state text-gray-500 dark:text-gray-400">
                             <i class="fas fa-book text-4xl mb-2 text-gray-300 dark:text-gray-600"></i>
-                            <p>No references</p>
+                            <p x-text="t('noReferences')"></p>
                         </div>
                     </div>
                 </div>
                 
                 <div class="resource-section">
                     <div class="resource-section-header flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
-                        <h3><i class="fas fa-image mr-2"></i>Assets</h3>
+                        <h3><i class="fas fa-image mr-2"></i><span x-text="t('assets')"></span></h3>
                         <button @click="showUploadDialog('asset')" class="btn btn-small btn-primary w-full sm:w-auto" :disabled="editingSkill && editingSkill.readOnly">
-                            <i class="fas fa-upload mr-1"></i>Upload
+                            <i class="fas fa-upload mr-1"></i><span x-text="t('upload')"></span>
                         </button>
                     </div>
                     <div 
@@ -340,7 +349,7 @@
                         </template>
                         <div x-show="!resources.assets || resources.assets.length === 0" class="empty-resource-state text-gray-500 dark:text-gray-400">
                             <i class="fas fa-image text-4xl mb-2 text-gray-300 dark:text-gray-600"></i>
-                            <p>No assets</p>
+                            <p x-text="t('noAssets')"></p>
                         </div>
                     </div>
                 </div>
@@ -358,20 +367,20 @@
                 @click.stop
                 class="bg-white dark:bg-gray-800 rounded-lg shadow-xl p-6 max-w-md w-full mx-4"
             >
-                <h3 class="text-lg font-semibold mb-4 text-gray-900 dark:text-gray-100">Confirm</h3>
+                <h3 class="text-lg font-semibold mb-4 text-gray-900 dark:text-gray-100" x-text="t('confirm')"></h3>
                 <p class="text-gray-700 dark:text-gray-300 mb-6" x-text="confirmModal.message"></p>
                 <div class="flex gap-3 justify-end">
                     <button 
                         @click="confirmModal.show = false; if (confirmModal.callback) { confirmModal.callback(false); confirmModal.callback = null; }"
                         class="px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 rounded hover:bg-gray-300 dark:hover:bg-gray-600 transition"
                     >
-                        Cancel
+                        <span x-text="t('cancel')"></span>
                     </button>
                     <button 
                         @click="confirmModal.show = false; if (confirmModal.callback) { confirmModal.callback(true); confirmModal.callback = null; }"
                         class="px-4 py-2 bg-red-600 dark:bg-red-500 text-white rounded hover:bg-red-700 dark:hover:bg-red-600 transition"
                     >
-                        Confirm
+                        <span x-text="t('confirm')"></span>
                     </button>
                 </div>
             </div>
@@ -390,7 +399,7 @@
             >
                 <div class="flex justify-between items-center p-4 border-b border-gray-200 dark:border-gray-700">
                     <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100">
-                        <i class="fas fa-edit mr-2"></i>Edit <span x-text="resourceEditorModal.name"></span>
+                        <i class="fas fa-edit mr-2"></i><span x-text="t('edit')"></span> <span x-text="resourceEditorModal.name"></span>
                     </h3>
                     <button 
                         @click="resourceEditorModal.show = false"
@@ -411,13 +420,13 @@
                         @click="resourceEditorModal.show = false"
                         class="px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 rounded hover:bg-gray-300 dark:hover:bg-gray-600 transition"
                     >
-                        Cancel
+                        <span x-text="t('cancel')"></span>
                     </button>
                     <button 
                         @click="saveResourceContent()"
                         class="px-4 py-2 bg-blue-600 dark:bg-blue-500 text-white rounded hover:bg-blue-700 dark:hover:bg-blue-600 transition"
                     >
-                        <i class="fas fa-save mr-2"></i>Save
+                        <i class="fas fa-save mr-2"></i><span x-text="t('save')"></span>
                     </button>
                 </div>
             </div>
@@ -436,7 +445,7 @@
             >
                 <div class="flex justify-between items-center p-4 border-b border-gray-200 dark:border-gray-700">
                     <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100">
-                        <i class="fas fa-upload mr-2"></i>Import Skill
+                        <i class="fas fa-upload mr-2"></i><span x-text="t('importSkillTitle')"></span>
                     </h3>
                     <button 
                         @click="showImportModal = false"
@@ -446,8 +455,7 @@
                     </button>
                 </div>
                 <div class="p-4">
-                    <p class="text-sm text-gray-600 dark:text-gray-400 mb-4">
-                        Upload a skill archive file (.tar.gz) to import a skill.
+                    <p class="text-sm text-gray-600 dark:text-gray-400 mb-4" x-text="t('importSkillDesc')">
                     </p>
                     <input 
                         type="file" 
@@ -462,7 +470,7 @@
                         @click="showImportModal = false"
                         class="px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 rounded hover:bg-gray-300 dark:hover:bg-gray-600 transition"
                     >
-                        Cancel
+                        <span x-text="t('cancel')"></span>
                     </button>
                 </div>
             </div>
@@ -481,7 +489,7 @@
             >
                 <div class="flex justify-between items-center p-4 border-b border-gray-200 dark:border-gray-700">
                     <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100">
-                        <i class="fas fa-code-branch mr-2"></i>Git Repositories
+                        <i class="fas fa-code-branch mr-2"></i><span x-text="t('gitRepositories')"></span>
                     </h3>
                     <button 
                         @click="showGitReposModal = false"
@@ -493,12 +501,12 @@
                 <div class="flex-1 overflow-auto p-4">
                     <!-- Add Repository Form -->
                     <div class="mb-6 p-4 bg-gray-50 dark:bg-gray-900/50 rounded-lg">
-                        <h4 class="text-md font-semibold mb-3 text-gray-900 dark:text-gray-100">Add Repository</h4>
+                        <h4 class="text-md font-semibold mb-3 text-gray-900 dark:text-gray-100" x-text="t('addRepository')"></h4>
                         <div class="flex gap-2">
                             <input 
                                 type="text" 
                                 x-model="newGitRepoUrl"
-                                placeholder="https://github.com/user/repo.git"
+                                :placeholder="t('repositoryUrlPlaceholder')"
                                 class="flex-1 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
                                 @keydown.enter="addGitRepo()"
                             >
@@ -508,7 +516,7 @@
                                 :disabled="isLoading || !newGitRepoUrl"
                             >
                                 <i x-show="!isLoading" class="fas fa-plus mr-2"></i>
-                                <i x-show="isLoading" class="fas fa-spinner fa-spin mr-2"></i>Add
+                                <i x-show="isLoading" class="fas fa-spinner fa-spin mr-2"></i><span x-text="t('add')"></span>
                             </button>
                         </div>
                     </div>
@@ -524,13 +532,13 @@
                                             x-show="repo.enabled" 
                                             class="px-2 py-0.5 text-xs rounded bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300"
                                         >
-                                            Enabled
+                                            <span x-text="t('enabled')"></span>
                                         </span>
                                         <span 
                                             x-show="!repo.enabled" 
                                             class="px-2 py-0.5 text-xs rounded bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400"
                                         >
-                                            Disabled
+                                            <span x-text="t('disabled')"></span>
                                         </span>
                                     </div>
                                     <div class="text-sm text-gray-600 dark:text-gray-400 truncate" x-text="repo.url"></div>
@@ -541,7 +549,7 @@
                                         class="btn btn-small"
                                         :class="repo.enabled ? 'btn-secondary' : 'btn-primary'"
                                         :disabled="isLoading"
-                                        :title="repo.enabled ? 'Disable repository' : 'Enable repository'"
+                                        :title="repo.enabled ? t('disableRepository') : t('enableRepository')"
                                     >
                                         <i :class="repo.enabled ? 'fa-toggle-on' : 'fa-toggle-off'" class="fas"></i>
                                     </button>
@@ -549,7 +557,7 @@
                                         @click="syncGitRepo(repo.id)"
                                         class="btn btn-small btn-secondary"
                                         :disabled="isLoading || !repo.enabled"
-                                        title="Sync repository"
+                                        :title="t('syncRepository')"
                                     >
                                         <i class="fas fa-sync"></i>
                                     </button>
@@ -557,7 +565,7 @@
                                         @click="editGitRepo(repo)"
                                         class="btn btn-small btn-secondary"
                                         :disabled="isLoading"
-                                        title="Edit repository"
+                                        :title="t('editRepository')"
                                     >
                                         <i class="fas fa-edit"></i>
                                     </button>
@@ -565,7 +573,7 @@
                                         @click="deleteGitRepo(repo.id)"
                                         class="btn btn-small btn-danger"
                                         :disabled="isLoading"
-                                        title="Delete repository"
+                                        :title="t('deleteRepository')"
                                     >
                                         <i class="fas fa-trash"></i>
                                     </button>
@@ -574,7 +582,7 @@
                         </template>
                         <div x-show="gitRepos.length === 0" class="text-center py-8 text-gray-500 dark:text-gray-400">
                             <i class="fas fa-code-branch text-4xl mb-2 text-gray-300 dark:text-gray-600"></i>
-                            <p>No git repositories configured</p>
+                            <p x-text="t('noGitRepos')"></p>
                         </div>
                     </div>
                 </div>
@@ -594,7 +602,7 @@
             >
                 <div class="flex justify-between items-center p-4 border-b border-gray-200 dark:border-gray-700">
                     <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100">
-                        <i class="fas fa-edit mr-2"></i>Edit Repository
+                        <i class="fas fa-edit mr-2"></i><span x-text="t('editRepository')"></span>
                     </h3>
                     <button 
                         @click="showEditGitRepoModal = false"
@@ -605,11 +613,11 @@
                 </div>
                 <div class="p-4">
                     <div class="mb-4">
-                        <label class="block text-sm font-medium mb-2 text-gray-900 dark:text-gray-100">Repository URL</label>
+                        <label class="block text-sm font-medium mb-2 text-gray-900 dark:text-gray-100" x-text="t('repositoryUrl')"></label>
                         <input 
                             type="text" 
                             x-model="editingGitRepo.url"
-                            placeholder="https://github.com/user/repo.git"
+                            :placeholder="t('repositoryUrlPlaceholder')"
                             class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
                         >
                     </div>
@@ -619,7 +627,7 @@
                         @click="showEditGitRepoModal = false"
                         class="px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 rounded hover:bg-gray-300 dark:hover:bg-gray-600 transition"
                     >
-                        Cancel
+                        <span x-text="t('cancel')"></span>
                     </button>
                     <button 
                         @click="updateGitRepo()"
@@ -627,7 +635,7 @@
                         :disabled="isLoading"
                     >
                         <i x-show="!isLoading" class="fas fa-save mr-2"></i>
-                        <i x-show="isLoading" class="fas fa-spinner fa-spin mr-2"></i>Save
+                        <i x-show="isLoading" class="fas fa-spinner fa-spin mr-2"></i><span x-text="t('save')"></span>
                     </button>
                 </div>
             </div>
@@ -712,6 +720,17 @@
                 newGitRepoUrl: '',
                 editingGitRepo: { id: '', url: '' },
                 isDark: true,
+                currentLang: i18n.getLang(),
+
+                // 翻译函数
+                t(key) {
+                    return i18n.t(key);
+                },
+
+                // 切换语言
+                toggleLanguage() {
+                    this.currentLang = i18n.toggleLang();
+                },
 
                 initTheme() {
                     // Check localStorage or default to dark
@@ -723,6 +742,8 @@
                         this.isDark = true;
                         document.documentElement.classList.add('dark');
                     }
+                    // 初始化语言
+                    this.currentLang = i18n.getLang();
                 },
 
                 toggleTheme() {
@@ -831,7 +852,7 @@
                         this.filteredSkills = this.skills;
                     } catch (error) {
                         console.error('Failed to load skills:', error);
-                        this.showToast('Failed to load skills', 'error');
+                        this.showToast(this.t('failedToLoadSkills'), 'error');
                     } finally {
                         this.isLoading = false;
                     }
@@ -849,7 +870,7 @@
                         this.filteredSkills = await response.json();
                     } catch (error) {
                         console.error('Search failed:', error);
-                        this.showToast('Search failed', 'error');
+                        this.showToast(this.t('searchFailed'), 'error');
                     } finally {
                         this.isLoading = false;
                     }
@@ -898,7 +919,7 @@
 
                 async saveSkill() {
                     if (this.editingSkill && this.editingSkill.readOnly) {
-                        this.showToast('Cannot save: This skill is read-only', 'error');
+                        this.showToast(this.t('cannotUpdateReadOnly'), 'error');
                         return;
                     }
 
@@ -907,15 +928,15 @@
                     }
 
                     if (!this.skillDescription.trim()) {
-                        this.showToast('Description is required', 'error');
+                        this.showToast(this.t('descriptionRequired'), 'error');
                         return;
                     }
                     if (this.skillDescription.length > 1024) {
-                        this.showToast('Description must be 1-1024 characters', 'error');
+                        this.showToast(this.t('descriptionLength'), 'error');
                         return;
                     }
                     if (this.skillCompatibility && this.skillCompatibility.length > 500) {
-                        this.showToast('Compatibility must be max 500 characters', 'error');
+                        this.showToast(this.t('compatibilityLength'), 'error');
                         return;
                     }
 
@@ -945,7 +966,7 @@
 
                         if (response.ok) {
                             await this.loadSkills();
-                            this.showToast('Skill saved successfully', 'success');
+                            this.showToast(this.t('skillSaved'), 'success');
                             
                             // Update editingSkill with fresh data from server
                             if (this.editingSkill) {
@@ -979,11 +1000,11 @@
                             }
                         } else {
                             const error = await response.json();
-                            this.showToast('Failed to save: ' + (error.error || 'Unknown error'), 'error');
+                            this.showToast(this.t('failedToSave') + ': ' + (error.error || 'Unknown error'), 'error');
                         }
                     } catch (error) {
                         console.error('Save failed:', error);
-                        this.showToast('Failed to save skill', 'error');
+                        this.showToast(this.t('failedToSave'), 'error');
                     } finally {
                         this.isLoading = false;
                     }
@@ -1051,7 +1072,7 @@
                         }
                     } catch (error) {
                         console.error('Failed to load resource:', error);
-                        this.showToast('Failed to load resource', 'error');
+                        this.showToast(this.t('failedToLoadResource'), 'error');
                     }
                 },
 
@@ -1076,14 +1097,14 @@
 
                         if (response.ok) {
                             await this.loadResources();
-                            this.showToast('Resource updated successfully', 'success');
+                            this.showToast(this.t('resourceUpdated'), 'success');
                         } else {
                             const error = await response.json();
-                            this.showToast('Failed to update: ' + (error.error || 'Unknown error'), 'error');
+                            this.showToast(this.t('failedToUpdate') + ': ' + (error.error || 'Unknown error'), 'error');
                         }
                     } catch (error) {
                         console.error('Update failed:', error);
-                        this.showToast('Failed to update resource', 'error');
+                        this.showToast(this.t('failedToUpdate'), 'error');
                     }
                 },
 
